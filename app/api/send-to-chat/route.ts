@@ -36,12 +36,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "この店舗はGoogle Chat送信機能が利用できません" }, { status: 400 })
     }
 
-    // Google Chatに送信するメッセージを作成（カードフォーマット）
     const itemsList = items
-      .map(
-        (item: { itemName: string; price: number; category: string }) =>
-          `• ${item.itemName} (${item.category}): ¥${item.price.toLocaleString()}`,
-      )
+      .map((item: { itemName: string; price: number; category: string; isEmergency?: boolean }) => {
+        const itemPrice = item.price + (item.isEmergency ? 1000 : 0)
+        const emergencyNote = item.isEmergency ? " ※緊急対応費+¥1,000含む" : ""
+        return `• ${item.itemName} (${item.category}): ¥${itemPrice.toLocaleString()}${emergencyNote}`
+      })
       .join("\n")
 
     const currentDate = new Date().toLocaleDateString("ja-JP", {

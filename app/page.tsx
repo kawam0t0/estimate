@@ -6,11 +6,14 @@ import { CategorySelector } from "@/components/category-selector"
 import { EstimateList } from "@/components/estimate-list"
 import { EstimatePreview } from "@/components/estimate-preview"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Switch } from "@/components/ui/switch"
 import { Loader2, FileText } from "lucide-react"
 import type { SpreadsheetItem } from "@/app/api/spreadsheet/route"
 
 export default function Home() {
   const [selectedStore, setSelectedStore] = useState<string | null>(null)
+  const [isEmergency, setIsEmergency] = useState(false)
   const [items, setItems] = useState<SpreadsheetItem[]>([])
   const [selectedItems, setSelectedItems] = useState<SpreadsheetItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -33,7 +36,7 @@ export default function Home() {
   }
 
   const handleAddItem = (item: SpreadsheetItem) => {
-    setSelectedItems([...selectedItems, item])
+    setSelectedItems([...selectedItems, { ...item, isEmergency }])
   }
 
   const handleRemoveItem = (index: number) => {
@@ -51,7 +54,10 @@ export default function Home() {
   const handleSendToChat = async () => {
     try {
       const TAX_RATE = 0.1
-      const subtotal = selectedItems.reduce((sum, item) => sum + item.price, 0)
+      const subtotal = selectedItems.reduce((sum, item) => {
+        const itemPrice = item.price + (item.isEmergency ? 1000 : 0)
+        return sum + itemPrice
+      }, 0)
       const tax = Math.floor(subtotal * TAX_RATE)
       const total = subtotal + tax
 
@@ -128,6 +134,15 @@ export default function Home() {
       <div className="container max-w-6xl mx-auto px-4 py-6">
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
+            <Card className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <h3 className="text-base font-semibold text-foreground">緊急対応</h3>
+                  <p className="text-sm text-muted-foreground">各アイテムに+1,000円の緊急対応費が追加されます</p>
+                </div>
+                <Switch checked={isEmergency} onCheckedChange={setIsEmergency} />
+              </div>
+            </Card>
             <StoreSelector selectedStore={selectedStore} onSelectStore={setSelectedStore} />
             <CategorySelector items={items} onAddItem={handleAddItem} />
           </div>
