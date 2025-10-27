@@ -36,6 +36,12 @@ export default function Home() {
   }
 
   const handleAddItem = (item: SpreadsheetItem) => {
+    console.log("[v0] アイテム追加:", {
+      itemName: item.itemName,
+      basePrice: item.price,
+      isEmergency,
+      finalPrice: item.price + (isEmergency ? 1000 : 0),
+    })
     setSelectedItems([...selectedItems, { ...item, isEmergency }])
   }
 

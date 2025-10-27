@@ -8,6 +8,7 @@ export interface SpreadsheetItem {
   category: string
   itemName: string
   price: number
+  isEmergency?: boolean // 緊急対応フラグ（アイテム追加時に設定される）
 }
 
 async function getGoogleSheetsClient() {
@@ -59,7 +60,12 @@ export async function GET() {
         const price = Number.parseFloat(priceStr)
         const validPrice = isNaN(price) ? 0 : price
 
-        console.log("[v0] 変換後の価格:", { priceRaw, priceStr, price, validPrice })
+        console.log("[v0] 変換後の価格:", {
+          priceRaw,
+          priceStr,
+          price,
+          validPrice,
+        })
 
         items.push({
           category: String(category).trim(),

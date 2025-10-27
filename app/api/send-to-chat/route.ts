@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server"
 
 const STORE_WEBHOOK_MAP: Record<string, string | undefined> = {
+  前橋50号店: process.env.GOOGLE_CHAT_WEBHOOK_MAEBASHI,
   伊勢崎韮塚店: process.env.GOOGLE_CHAT_WEBHOOK_ISESAKI,
   高崎棟高店: process.env.GOOGLE_CHAT_WEBHOOK_TAKASAKI,
   足利緑町店: process.env.GOOGLE_CHAT_WEBHOOK_ASHIKAGA,
   新前橋店: process.env.GOOGLE_CHAT_WEBHOOK_SHINMAEBASHI,
   太田新田店: process.env.GOOGLE_CHAT_WEBHOOK_OTA,
-  // 前橋50号店はWebhook URLなし（送信機能なし）
 }
 
 export async function POST(request: Request) {
@@ -20,6 +20,7 @@ export async function POST(request: Request) {
 
     console.log("[v0] 店舗:", store)
     console.log("[v0] 環境変数確認:", {
+      MAEBASHI: !!process.env.GOOGLE_CHAT_WEBHOOK_MAEBASHI,
       ISESAKI: !!process.env.GOOGLE_CHAT_WEBHOOK_ISESAKI,
       TAKASAKI: !!process.env.GOOGLE_CHAT_WEBHOOK_TAKASAKI,
       ASHIKAGA: !!process.env.GOOGLE_CHAT_WEBHOOK_ASHIKAGA,
@@ -32,14 +33,13 @@ export async function POST(request: Request) {
 
     if (!WEBHOOK_URL) {
       console.log("[v0] Webhook URLが見つかりません")
-      // 前橋50号店など、Webhook URLが設定されていない店舗の場合
       return NextResponse.json({ error: "この店舗はGoogle Chat送信機能が利用できません" }, { status: 400 })
     }
 
     const itemsList = items
       .map((item: { itemName: string; price: number; category: string; isEmergency?: boolean }) => {
         const itemPrice = item.price + (item.isEmergency ? 1000 : 0)
-        const emergencyNote = item.isEmergency ? " ※緊急対応費+¥1,000含む" : ""
+        const emergencyNote = item.isEmergency ? " ※緊急対応費+¥1,000含" : ""
         return `• ${item.itemName} (${item.category}): ¥${itemPrice.toLocaleString()}${emergencyNote}`
       })
       .join("\n")

@@ -15,14 +15,20 @@ interface EstimatePreviewProps {
 
 export function EstimatePreview({ store, items, onBack, onSend }: EstimatePreviewProps) {
   const [sending, setSending] = useState(false)
-  const total = items.reduce((sum, item) => sum + item.price, 0)
+  const TAX_RATE = 0.1 // 消費税率10%
+
+  const subtotal = items.reduce((sum, item) => {
+    const itemPrice = item.price + (item.isEmergency ? 1000 : 0)
+    return sum + itemPrice
+  }, 0)
+  const tax = Math.floor(subtotal * TAX_RATE)
+  const total = subtotal + tax
+
   const currentDate = new Date().toLocaleDateString("ja-JP", {
     year: "numeric",
     month: "long",
     day: "numeric",
   })
-
-  const canSendToChat = store !== "前橋50号店"
 
   const handleSend = async () => {
     setSending(true)
@@ -62,49 +68,64 @@ export function EstimatePreview({ store, items, onBack, onSend }: EstimatePrevie
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-muted-foreground">項目明細</h3>
             <div className="space-y-2">
-              {items.map((item, index) => (
-                <div
-                  key={`${item.itemName}-${index}`}
-                  className="flex items-start justify-between gap-4 py-3 border-b border-border last:border-0"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">{item.itemName}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{item.category}</p>
+              {items.map((item, index) => {
+                const itemPrice = item.price + (item.isEmergency ? 1000 : 0)
+                return (
+                  <div
+                    key={`${item.itemName}-${index}`}
+                    className="flex items-start justify-between gap-4 py-3 border-b border-border last:border-0"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">{item.itemName}/工賃含</p>
+                      <p className="text-xs text-muted-foreground mt-1">{item.category}</p>
+                      {item.isEmergency && (
+                        <p className="text-xs text-orange-600 font-medium mt-1">※ 緊急対応+¥1,000</p>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-semibold text-foreground">¥{itemPrice.toLocaleString()}</p>
+                      {item.isEmergency && (
+                        <p className="text-xs text-muted-foreground mt-1">(基本 ¥{item.price.toLocaleString()})</p>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-sm font-semibold text-foreground shrink-0">¥{item.price.toLocaleString()}</p>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
 
           {/* 合計 */}
-          <div className="pt-4 border-t-2 border-primary">
-            <div className="flex items-center justify-between">
-              <span className="text-lg font-bold text-foreground">合計金額</span>
-              <span className="text-2xl md:text-3xl font-bold text-primary">¥{total.toLocaleString()}</span>
+          <div className="pt-4 space-y-3">
+            <div className="flex items-center justify-between text-base">
+              <span className="text-muted-foreground">小計（税抜き）</span>
+              <span className="font-semibold text-foreground">¥{subtotal.toLocaleString()}</span>
+            </div>
+            <div className="flex items-center justify-between text-base">
+              <span className="text-muted-foreground">消費税（10%）</span>
+              <span className="font-semibold text-foreground">¥{tax.toLocaleString()}</span>
+            </div>
+            <div className="pt-3 border-t-2 border-primary">
+              <div className="flex items-center justify-between">
+                <span className="text-lg font-bold text-foreground">合計金額（税込）</span>
+                <span className="text-2xl md:text-3xl font-bold text-primary">¥{total.toLocaleString()}</span>
+              </div>
             </div>
           </div>
         </Card>
 
-        {canSendToChat ? (
-          <Button className="w-full" size="lg" onClick={handleSend} disabled={sending}>
-            {sending ? (
-              <>
-                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                送信中...
-              </>
-            ) : (
-              <>
-                <Send className="h-5 w-5 mr-2" />
-                Google Chatに送信
-              </>
-            )}
-          </Button>
-        ) : (
-          <div className="text-center py-4 text-sm text-muted-foreground">
-            この店舗はGoogle Chat送信機能が利用できません
-          </div>
-        )}
+        <Button className="w-full" size="lg" onClick={handleSend} disabled={sending}>
+          {sending ? (
+            <>
+              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+              送信中...
+            </>
+          ) : (
+            <>
+              <Send className="h-5 w-5 mr-2" />
+              Google Chatに送信
+            </>
+          )}
+        </Button>
       </div>
     </div>
   )
